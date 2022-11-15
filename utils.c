@@ -53,3 +53,23 @@ long long	timestamp(void)
 	gettimeofday(&t, NULL);
 	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
+
+void	free_all(t_data *dat)
+{
+	int	i;
+
+	i = -1;
+	while (++i < dat->philo_count)
+	{
+		//pthread_join(dat->philos[i]->thread, NULL);
+		free(dat->philos[i]);
+	}
+	i = -1;
+	while (++i < dat->philo_count)
+		pthread_mutex_destroy(&(dat->forks[i]));
+	//pthread_mutex_destroy(&dat->is_eating);
+	//pthread_mutex_destroy(&dat->print);
+	free(dat->philos);
+	free(dat->forks);
+	free(dat);
+}

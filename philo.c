@@ -12,9 +12,9 @@
 
 #include "philosophers.h"
 
-void		philo_wait(long long time, t_data *dat)
+void	philo_wait(long long time, t_data *dat)
 {
-	long long i;
+	long long	i;
 
 	i = timestamp();
 	while (!(dat->philo_died))
@@ -25,14 +25,14 @@ void		philo_wait(long long time, t_data *dat)
 	}
 }
 
-void		philo_print(t_data *dat, int id, char *string)
+void	philo_print(t_data *dat, int id, char *string)
 {
 	pthread_mutex_lock(&(dat->print));
 	if (!(dat->philo_died))
 	{
-		printf("%lli ", timestamp() - dat->start_time);
-		printf("%i ", id + 1);
-		printf("%s\n", string);
+		printf("%8lli ", timestamp() - dat->start_time);
+		printf("%3i ", id + 1);
+		printf("%20s\n", string);
 	}
 	pthread_mutex_unlock(&(dat->print));
 	return ;
@@ -40,7 +40,7 @@ void		philo_print(t_data *dat, int id, char *string)
 
 void	philo_eats(t_philo *philo)
 {
-	t_data *dat;
+	t_data	*dat;
 
 	dat = philo->data;
 	pthread_mutex_lock(&(dat->forks[philo->l_id]));
@@ -50,11 +50,11 @@ void	philo_eats(t_philo *philo)
 	pthread_mutex_lock(&(dat->is_eating));
 	philo_print(dat, philo->i, "is eating");
 	philo->last_eat_timestamp = timestamp();
-	philo_wait(dat->eat_time, dat);
 	pthread_mutex_unlock(&(dat->is_eating));
+	philo_wait(dat->eat_time, dat);
+	philo->eat_count++;
 	pthread_mutex_unlock(&(dat->forks[philo->l_id]));
 	pthread_mutex_unlock(&(dat->forks[philo->r_id]));
-	philo->eat_count++;
 }
 
 void	*philo_thread(void *arg)
@@ -66,9 +66,6 @@ void	*philo_thread(void *arg)
 	i = 0;
 	philo = (t_philo *)arg;
 	dat = philo->data;
-	pthread_mutex_lock(&dat->is_eating);
-	printf("%d '%p'\n", philo->i, philo->data);
-	pthread_mutex_unlock(&dat->is_eating);
 	if (philo->i % 2)
 		usleep(15000);
 	while (!(dat->philo_died))

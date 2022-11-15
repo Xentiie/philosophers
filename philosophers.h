@@ -56,4 +56,7 @@ int			ft_isdigit(int c);
 void		philo_eats(t_philo *philo);
 void		philo_print(t_data *dat, int id, char *string);
 void		*philo_thread(void *arg);
+
+void		free_all(t_data *dat);
+
 #endif
