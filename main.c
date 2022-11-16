@@ -79,8 +79,11 @@ int	main(int argc, char **argv)
 	data->philo_count = ft_atoi(argv[1]);
 	data->death_time = ft_atoi(argv[2]);
 	data->eat_time = ft_atoi(argv[3]);
-	data->eat_count = ft_atoi(argv[4]);
+	data->sleep_time = ft_atoi(argv[4]);
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->philo_count);
+	if (data->philo_count < 1 || data->death_time < 0 || data->eat_time < 0
+		|| data->sleep_time < 0 || data->philo_count > 250)
+		return (1);
 	if (argc == 6)
 		data->eat_count = ft_atoi(argv[5]);
 	else
