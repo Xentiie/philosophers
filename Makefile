@@ -12,22 +12,15 @@
 
 .DEFAULT_GOAL := all
 
-NAME	    =	philosophers
-SRCS        =   $(shell find ./ -type f -name '*.c')
+NAME	    =	philo
+SRCS        =   $(shell find . -type f -name '*.c')
 OBJS		=	${SRCS:.c=.o}
 
-#Linux
-# INCLUDES  	=	-I./** -I./mlx_engine/includes -I./mlx_engine/libft -I/usr/include -I./mlx_engine/mlx_linux -I/usr/include/freetype2
 INCLUDES  	=	-I./
 LIBS         :=  -lpthread
-#Mac
-#INCLUDES   :=  -I./includes -I./libft -I/usr/local/include
-#MLX        :=  -L/usr/local/lib -lmlx -framework OpenGL -framework AppKit
-#INCLUDES	:=	-I./mlx_engine/includes -I./mlx_engine/libft
 
 CC			=	gcc
-#CFLAGS		:=	-Wall -Wextra -Werror -O3
-CFLAGS		:=	-O0 -g
+CFLAGS		:=	-Wall -Wextra -Werror -O3
 RM			=	rm -f
 ifdef MOREFLAGS
 CFLAGS		:=	$(CFLAGS) $(MOREFLAGS)
