@@ -26,6 +26,7 @@ typedef struct s_data t_data;
 typedef struct s_philo
 {
 	int			i;
+	int			pid;
 	int			eat_count;
 	long long	last_eat_timestamp;
 	pthread_t	thread;
@@ -62,6 +63,6 @@ void		philo_eats(t_philo *philo);
 void		philo_print(t_data *dat, int id, char *string);
 void		*philo_thread(void *arg);
 
-void		free_all(t_data *dat);
+void		cleanup(t_data *data);
 
 #endif

@@ -12,34 +12,7 @@
 
 #include "philosophers_bonus.h"
 #include <fcntl.h>
-
-void	mainloop(t_data *r, t_philo **philos)
-{
-	int	i;
-
-	r->loop = 0;
-	while (!(r->loop))
-	{
-		i = -1;
-		while (++i < r->philo_count && !(r->philo_died))
-		{
-			if (timestamp() - philos[i]->last_eat_timestamp > r->death_time)
-			{
-				philo_print(r, i, "died");
-				r->philo_died = 1;
-			}
-			usleep(100);
-		}
-		if (r->philo_died)
-			break ;
-		i = 0;
-		while (r->eat_count != -1 && i < r->philo_count
-			&& philos[i]->eat_count >= r->eat_count)
-			i++;
-		if (i == r->philo_count)
-			r->loop = 1;
-	}
-}
+#include <sys/wait.h>
 
 void	create_semaphores(t_data *dat)
 {
@@ -54,28 +27,39 @@ void	create_semaphores(t_data *dat)
 			dat->philo_count);
 }
 
+void	do_forks(t_data *dat)
+{
+	int	i;
+
+	i = 0;
+	while (i < dat->philo_count)
+	{
+		dat->philos[i]->pid = fork();
+		if (dat->philos[i]->pid == 0)
+		{
+			philo_thread(dat->philos[i]);
+			exit(0);
+		}
+		i++;
+		usleep(100);
+	}
+}
+
 void	launch(t_data *dat)
 {
 	int	i;
 
 	i = 0;
 	dat->philos = malloc(sizeof(t_philo *) * dat->philo_count);
-	dat->death = NULL;
-	dat->stop = NULL;
-	dat->message = NULL;
-	dat->forks = NULL;
 	while (i < dat->philo_count)
 	{
-		pthread_mutex_init(&(dat->forks[i]), NULL);
 		dat->philos[i] = malloc(sizeof(t_philo));
 		dat->philos[i]->data = dat;
 		dat->philos[i]->i = i;
 		dat->philos[i]->last_eat_timestamp = timestamp();
-		pthread_create(&(dat->philos[i]->thread),
-			NULL, philo_thread, dat->philos[i]);
 		i++;
 	}
-	create_semaphores(dat);
+	do_forks(dat);
 }
 
 int	main(int argc, char **argv)
@@ -101,8 +85,11 @@ int	main(int argc, char **argv)
 		data->eat_count = ft_atoi(argv[5]);
 	else
 		data->eat_count = -1;
+	create_semaphores(data);
+	sem_wait(data->stop);
 	launch(data);
-	mainloop(data, data->philos);
-	free_all(data);
+	sem_wait(data->stop);
+	cleanup(data);
+
 	return (0);
 }

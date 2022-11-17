@@ -6,76 +6,91 @@
 /*   By: reclaire <reclaire@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/07 00:46:28 by reclaire          #+#    #+#             */
-/*   Updated: 2022/11/17 03:25:29 by reclaire         ###   ########.fr       */
+/*   Updated: 2022/11/17 16:58:11 by reclaire         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers_bonus.h"
 
-void	philo_wait(long long time, t_data *dat)
+void philo_print(t_data *dat, int id, char *string)
 {
-	long long	i;
-
-
-	sem_t *s;
-	s->__align
-	i = timestamp();
-	while (!(dat->philo_died))
-	{
-		if (timestamp() - i >= time)
-			break ;
-		usleep(50);
-	}
+	sem_wait(dat->message);
+	printf("%lli ", timestamp() - dat->start_time);
+	printf("%i ", id + 1);
+	printf("%s\n", string);
+	sem_post(dat->message);
+	return;
 }
 
-void	philo_print(t_data *dat, int id, char *string)
+void philo_eats(t_philo *philo)
 {
-	pthread_mutex_lock(&(dat->print));
-	if (!(dat->philo_died))
-	{
-		printf("%8lli ", timestamp() - dat->start_time);
-		printf("%3i ", id + 1);
-		printf("%20s\n", string);
-	}
-	pthread_mutex_unlock(&(dat->print));
-	return ;
-}
-
-void	philo_eats(t_philo *philo)
-{
-	t_data	*dat;
+	t_data *dat;
 
 	dat = philo->data;
-	pthread_mutex_lock(&(dat->forks[philo->l_id]));
+	sem_wait(philo->data->forks);
 	philo_print(dat, philo->i, "has taken a fork");
-	pthread_mutex_lock(&(dat->forks[philo->r_id]));
+	sem_wait(philo->data->forks);
 	philo_print(dat, philo->i, "has taken a fork");
-	pthread_mutex_lock(&(dat->is_eating));
-	philo_print(dat, philo->i, "is eating");
+
 	philo->last_eat_timestamp = timestamp();
-	pthread_mutex_unlock(&(dat->is_eating));
-	philo_wait(dat->eat_time, dat);
+	philo_print(dat, philo->i, "is eating");
+	usleep(dat->eat_time * 1000);
 	philo->eat_count++;
-	pthread_mutex_unlock(&(dat->forks[philo->l_id]));
-	pthread_mutex_unlock(&(dat->forks[philo->r_id]));
+	sem_post(philo->data->forks);
+	sem_post(philo->data->forks);
 }
 
-void	*philo_thread(void *arg)
+void *philo_death_check(void *d)
 {
-	int		i;
-	t_philo	*philo;
-	t_data	*dat;
+	t_data *dat;
+	t_philo *philo;
+
+	philo = (t_philo *)d;
+	dat = philo->data;
+	while (1)
+	{
+		sem_wait(philo->data->death);
+		if (timestamp() - philo->last_eat_timestamp > philo->data->death_time)
+		{
+			//philo_print(dat, philo->i, "died");
+			sem_wait(dat->message);
+			printf("%lli ", timestamp() - dat->start_time);
+			printf("%i died\n", philo->i + 1);
+			sem_post(dat->stop);
+			break;
+		}
+		sem_post(philo->data->death);
+		sem_wait(philo->data->death);
+		if (dat->eat_count != -1 && philo->eat_count >= dat->eat_count)
+		{
+			sem_wait(dat->message);
+			printf("%lli ", timestamp() - dat->start_time);
+			printf("%i Done !\n", philo->i + 1);
+			sem_post(dat->stop);
+			break;
+		}
+		sem_post(philo->data->death);
+	}
+	return (NULL);
+}
+
+void *philo_thread(void *arg)
+{
+	int i;
+	t_philo *philo;
+	t_data *dat;
+	pthread_t death_check;
 
 	i = 0;
 	philo = (t_philo *)arg;
 	dat = philo->data;
-	if (philo->i % 2)
-		usleep(15000);
-	while (!(dat->philo_died))
+	pthread_create(&death_check, NULL, philo_death_check, philo);
+	pthread_detach(death_check);
+	while (1)
 	{
 		philo_eats(philo);
 		philo_print(dat, philo->i, "is sleeping");
-		philo_wait(dat->sleep_time, dat);
+		usleep(dat->sleep_time * 1000);
 		philo_print(dat, philo->i, "is thinking");
 		i++;
 	}

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "philosophers_bonus.h"
+#include <signal.h>
 
 int	ft_isdigit(int c)
 {
@@ -54,16 +55,19 @@ long long	timestamp(void)
 	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
 
-void	free_all(t_data *dat)
+void	cleanup(t_data *data)
 {
 	int	i;
+	t_philo **philo;
 
-	i = -1;
-	while (++i < dat->philo_count)
-		free(dat->philos[i]);
-	i = -1;
-	while (++i < dat->philo_count)
-		pthread_mutex_destroy(&(dat->forks[i]));
-	free(dat->philos);
-	free(dat);
+	i = 0;
+	philo = data->philos;
+	while (i < data->philo_count)
+		kill(philo[i++]->pid, SIGKILL);
+	sem_close(data->death);
+	sem_close(data->message);
+	sem_close(data->stop);
+	sem_close(data->forks);
+	free(philo);
+	free(data);
 }
