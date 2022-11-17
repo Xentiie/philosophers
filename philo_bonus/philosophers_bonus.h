@@ -10,21 +10,21 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PHILOSOPHERS_H
-# define PHILOSOPHERS_H
+#ifndef PHILOSOPHERS_BONUS_H
+# define PHILOSOPHERS_BONUS_H
 
 # include <stdlib.h>
 # include <stdio.h>
 # include <pthread.h>
 # include <unistd.h>
 # include <sys/time.h>
+# include <semaphore.h>
+
 
 typedef struct s_data t_data;
 
 typedef struct s_philo
 {
-	int			l_id;
-	int			r_id;
 	int			i;
 	int			eat_count;
 	long long	last_eat_timestamp;
@@ -39,13 +39,19 @@ typedef struct s_data
 	int				eat_time;
 	int				sleep_time;
 	int				eat_count;
+
 	int				philo_died;
+	
 	int				loop;
+	
 	long long		start_time;
+	
 	t_philo			**philos;
-	pthread_mutex_t	*forks;
-	pthread_mutex_t	is_eating;
-	pthread_mutex_t	print;
+	
+	sem_t			*forks;
+	sem_t			*message;
+	sem_t			*death;
+	sem_t			*stop;
 }	t_data;
 
 long long	timestamp(void);

@@ -71,8 +71,6 @@ void	*philo_thread(void *arg)
 	while (!(dat->philo_died))
 	{
 		philo_eats(philo);
-		if (dat->all_eat)
-			break ;
 		philo_print(dat, philo->i, "is sleeping");
 		philo_wait(dat->sleep_time, dat);
 		philo_print(dat, philo->i, "is thinking");
